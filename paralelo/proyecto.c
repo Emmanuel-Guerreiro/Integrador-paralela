@@ -4,14 +4,12 @@
 #include "util.c"
 #include "sort.c"
 
-int array[10] = {3, 5, 1, 2, 7, 6, 8, 9, 0, 4};
-
 // En los parametros asumo que paso
 // argv[0] => Cantidad de nodos
 // argv[1] => El array
 int main(int argc, char **argv)
 {
-    printf("%s", argv[1]);
+
     /***** Inicializo MPI *****/
     int my_id,
         comm_size;
@@ -23,18 +21,39 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD,
                   &comm_size);
 
-    /***** Parseo el array *****/
+    int array_length = atoi(argv[1]);
+    int *array = malloc(array_length * sizeof(*array));
+
+    if (my_id == 0)
+    {
+        srand(time(NULL));
+        printf("This is the unsorted array: ");
+        int i;
+        for (i = 0; i < array_length; ++i)
+        {
+
+            array[i] = rand() % array_length;
+            printf("%d ", array[i]);
+        }
+
+        MPI_Bcast(array,
+                  array_length,
+                  MPI_INT,
+                  0,
+                  MPI_COMM_WORLD);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /*****Defino variables necesarias *****/
-    int array_length = sizeof(array) / sizeof(array[0]);
 
-    // Todo: Cambiar por comm_size para que se pueda usar en distintos tamaños
-    int sub_array_length = array_length / 8;
+    int sub_array_length = array_length / comm_size;
+
     int partition_size = array_length / sub_array_length;
 
     // Todo: Si el tamaño del array es dinamico, entonces cambiar la definicion
-    // int *sub_array = malloc(partition_size * sizeof(int));
-    int sub_array[sub_array_length];
+    int *sub_array = malloc(sub_array_length * sizeof(int));
+    // int  [sub_array_length];
 
     /***** Reparto subarrays *****/
     MPI_Scatter(array,
@@ -47,8 +66,8 @@ int main(int argc, char **argv)
                 MPI_COMM_WORLD);
 
     // Todo: Si el tamaño del array es dinamico, entonces cambiar la definicion
-    // int *aux_array = malloc(partition_size * sizeof(int));
-    int aux_array[sub_array_length];
+    int *aux_array = malloc(sub_array_length * sizeof(int));
+    // int aux_array[sub_array_length];
     mergeSort(sub_array, aux_array, 0, sub_array_length - 1);
 
     /***** Concateno todos los subarray en 1 *****/
@@ -72,7 +91,7 @@ int main(int argc, char **argv)
     if (my_id == 0)
     {
         // Todo: Si el tamaño del array es dinamico, entonces cambiar la definicion
-        int temp_array[25];
+        int *temp_array = malloc(array_length * sizeof(int));
 
         printArray(merged_array, array_length, 1);
         mergeSort(merged_array, temp_array, 0, array_length - 1);
