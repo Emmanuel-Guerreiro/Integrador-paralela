@@ -11,6 +11,7 @@ void printArray(int arr[], int arr_size, int node_id)
     {
         printf(" %d", arr[i]);
     }
+
     printf("} \n");
 }
 

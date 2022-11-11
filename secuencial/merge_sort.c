@@ -1,27 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "merge_sort.h"
+#include <mpi.h>
 
-int main()
+int main(int argc, char **argv)
 {
+    MPI_Init(&argc, &argv);
+    double start_time = MPI_Wtime();
 
     // Build array
-    int arr_size;
-    printf("Enter number of elements in the array:\n");
-    scanf("%d", &arr_size);
+    int array_length = atoi(argv[1]);
 
-    int arr[arr_size], aux[arr_size];
-    printf("Enter %d integers\n", arr_size);
+    int *arr = malloc(array_length * sizeof(*arr));
+    int *aux = malloc(array_length * sizeof(*aux));
 
-    for (int i = 0; i < arr_size; i++)
-        scanf("%d", &arr[i]);
-
-    printArray("original", arr, arr_size);
+    srand(time(NULL));
+    int i;
+    for (i = 0; i < array_length; ++i)
+    {
+        arr[i] = rand() % array_length;
+    }
 
     // Start merge
-    mergeSort(arr, 0, arr_size - 1, aux);
+    mergeSort(arr, 0, array_length - 1, aux);
 
-    printArray("sorted", arr, arr_size);
+    double end_time = MPI_Wtime();
+
+    printf("La ejecucion secuencial tomó: %f s (MPI_TIME)\n", (end_time - start_time));
+    MPI_Finalize();
 
     return 0;
 }
@@ -65,9 +71,10 @@ void mergeSort(int arr[], int s, int e, int aux[])
         }
     }
 
-    for (int k = s; k <= e; k++)
+    int h;
+    for (h = s; h <= e; h++)
     { // copy the elements from aux[] to a[]
-        arr[k] = aux[k];
+        arr[h] = aux[h];
     }
 }
 
@@ -77,7 +84,8 @@ void printArray(char str[], int arr[], int arr_size)
     printf("Printing the %s array:\n", str);
 
     printf("{");
-    for (int i = 0; i < arr_size; i++)
+    int i;
+    for (i = 0; i < arr_size; i++)
         printf(" %d", arr[i]);
     printf("} \n");
 }

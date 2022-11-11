@@ -21,19 +21,19 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD,
                   &comm_size);
 
+    double start_time = MPI_Wtime();
+
     int array_length = atoi(argv[1]);
     int *array = malloc(array_length * sizeof(*array));
 
     if (my_id == 0)
     {
         srand(time(NULL));
-        printf("This is the unsorted array: ");
         int i;
         for (i = 0; i < array_length; ++i)
         {
 
             array[i] = rand() % array_length;
-            printf("%d ", array[i]);
         }
 
         MPI_Bcast(array,
@@ -93,16 +93,14 @@ int main(int argc, char **argv)
         // Todo: Si el tamaño del array es dinamico, entonces cambiar la definicion
         int *temp_array = malloc(array_length * sizeof(int));
 
-        printArray(merged_array, array_length, 1);
         mergeSort(merged_array, temp_array, 0, array_length - 1);
-        printArray(merged_array, array_length, 1);
-
-        // free(merged_array);
     }
 
-    // free(sub_array);
-    // free(aux_array);
-
+    double end_time = MPI_Wtime();
+    if (my_id == 0)
+    {
+        printf("La ejecucion tomó: %f s (MPI_TIME)\n", (end_time - start_time));
+    }
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
 
